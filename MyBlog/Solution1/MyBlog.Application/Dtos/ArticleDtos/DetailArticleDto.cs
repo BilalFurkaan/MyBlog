@@ -7,5 +7,6 @@ public class DetailArticleDto : ResultArticleDto
     public string AuthorUserName { get; set; }
     public string AuthorJob { get; set; }
     public string AuthorAbout { get; set; }
+    public string UserId { get; set; }
     public List<ResultCommentDto> Comments { get; set; } = new();
 }

@@ -7,4 +7,9 @@
         <RootNamespace>WebApp</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\MyBlog.Domain\MyBlog.Domain.csproj" />
+      <ProjectReference Include="..\MyBlog.Persistence\MyBlog.Persistence.csproj" />
+    </ItemGroup>
+
 </Project>

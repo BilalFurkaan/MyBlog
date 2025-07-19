@@ -10,7 +10,8 @@ public class Article
     public int CategoryId { get; set; }
     public int? SubcategoryId { get; set; }
     public int? TechnologyId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
+    //public string? FeaturedImageUrl { get; set; }
     //navigation
     public Category Category { get; set; }
     public Subcategory Subcategory { get; set; }

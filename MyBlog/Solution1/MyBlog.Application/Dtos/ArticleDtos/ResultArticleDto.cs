@@ -13,7 +13,7 @@ public class ResultArticleDto
     public string? SubcategoryName { get; set; }
     public int? TechnologyId { get; set; }
     public string? TechnologyName { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     public string AuthorNickName { get; set; }
     public int CommentCount { get; set; }
 }

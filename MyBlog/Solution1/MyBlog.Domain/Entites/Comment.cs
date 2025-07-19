@@ -7,7 +7,7 @@ public class Comment
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int ArticleId { get; set; }
-    public int UserId { get; set; }
+    public string UserId { get; set; }
     // Navigation 
     public Article Article { get; set; }
     public User User { get; set; }

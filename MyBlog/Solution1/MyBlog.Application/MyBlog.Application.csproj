@@ -7,7 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+      <PackageReference Include="Azure.Storage.Common" Version="12.19.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.18" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.18" />
+      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.12.1" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\MyBlog.Domain\MyBlog.Domain.csproj" />
+      <ProjectReference Include="..\MyBlog.Persistence\MyBlog.Persistence.csproj" />
+      <ProjectReference Include="..\MyBlog.WebApp\MyBlog.WebApp.csproj" />
     </ItemGroup>
 
 </Project>

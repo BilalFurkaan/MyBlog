@@ -1,7 +1,29 @@
+using WebApp.Services.ArticleApiService;
+using WebApp.Services.UserApiService;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Api base adresini appsettings.json'dan oku
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
+
+builder.Services.AddHttpClient<IArticleApiService, ArticleApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+builder.Services.AddHttpClient<IUserApiService, UserApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(1);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -17,7 +39,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -20,4 +20,5 @@ public class UpdateArticleDto
 
     public int? SubcategoryId { get; set; }
     public int? TechnologyId { get; set; }
+    public string UserId { get; set; }
 }

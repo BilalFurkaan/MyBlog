@@ -4,21 +4,29 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <RootNamespace>WebApplication1</RootNamespace>
+        <RootNamespace>MyBlog.WebApi</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.18" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.18" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.18">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyBlog.Application\MyBlog.Application.csproj" />
       <ProjectReference Include="..\MyBlog.Persistence\MyBlog.Persistence.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Controllers\" />
     </ItemGroup>
 
 </Project>

@@ -9,4 +9,6 @@ public class CreateCommentDto
  public string Content { get; set; }
  [Required]
  public int ArticleId { get; set; }
+ 
+ public string UserId { get; set; }
 }

@@ -51,7 +51,7 @@ public class CommentService: ICommentService
 
     public async Task<IEnumerable<ResultCommentDto>> GetCommentsByArticleIdAsync(int articleId)
     {
-        var comments = await _repository.GetAllWithIncludeAsync(c => c.ArticleId == articleId, c => c.Article, c => c.User);
+        var comments = await _repository.GetWhereWithIncludeAsync(c => c.ArticleId == articleId, c => c.Article, c => c.User);
         return comments.Select(c => new ResultCommentDto
         {
             Id = c.Id,

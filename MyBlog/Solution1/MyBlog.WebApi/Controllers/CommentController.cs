@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyBlog.Application.Dtos.CommentDtos;
@@ -35,10 +37,13 @@ namespace MyBlog.WebApi.Controllers
             }
         }
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateComment(CreateCommentDto createCommentDto)
         {
+            var UserId=User.FindFirstValue(ClaimTypes.NameIdentifier);
             try
             {
+                createCommentDto.UserId = UserId;
                 var comment = await _commentService.CreateCommentAsync(createCommentDto);
                 return CreatedAtAction(nameof(GetCommentById), new { id = comment.Id }, comment);
             }
@@ -48,13 +53,22 @@ namespace MyBlog.WebApi.Controllers
             }
         }
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateComment(int id, UpdateCommentDto updateCommentDto)
         {
             if (id != updateCommentDto.Id)
                 return BadRequest("Id mismatch.");
-
+            var UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             try
             {
+                // Yorumun sahibi mi kontrol et
+                var comment = await _commentService.GetCommentByIdAsync(id);
+                if (comment == null)
+                    return NotFound("Yorum bulunamadı.");
+                if (comment.UserId != UserId)
+                    return Forbid("Bu yorumu güncellemeye yetkiniz yok.");
+
+                updateCommentDto.UserId = UserId;
                 var updatedComment = await _commentService.UpdateCommentAsync(updateCommentDto);
                 return Ok(updatedComment);
             }
@@ -64,10 +78,19 @@ namespace MyBlog.WebApi.Controllers
             }
         }
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteComment(int id)
         {
+            var UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             try
             {
+                // Yorumun sahibi mi kontrol et
+                var comment = await _commentService.GetCommentByIdAsync(id);
+                if (comment == null)
+                    return NotFound("Yorum bulunamadı.");
+                if (comment.UserId != UserId)
+                    return Forbid("Bu yorumu silmeye yetkiniz yok.");
+                
                 await _commentService.DeleteCommentAsync(id);
                 return NoContent();
             }

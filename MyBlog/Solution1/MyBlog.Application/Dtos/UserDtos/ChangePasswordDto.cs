@@ -2,14 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MyBlog.Application.Dtos.UserDtos;
 
-public class ChangePassword
+public class ChangePasswordDto
 {
     [Required]
     public string Id { get; set; }
 
+    [Required(ErrorMessage = "Mevcut şifre gereklidir")]
     [StringLength(100, MinimumLength = 6)]
     public string OldPassword { get; set; }
     
+    [Required(ErrorMessage = "Yeni şifre gereklidir")]
     [StringLength(100, MinimumLength = 6)]
     public string? NewPassword { get; set; }
     

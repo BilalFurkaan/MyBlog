@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Models;
+using WebApp.Helpers;
 
 namespace WebApp.Controllers;
 
@@ -15,6 +16,13 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        var token = Request.Cookies["access_token"];
+        string userId = null;
+        if (!string.IsNullOrEmpty(token))
+        {
+            userId = JwtHelper.GetClaimFromToken(token, "nameid");
+        }
+        ViewBag.DebugUserId = userId;
         return View();
     }
 

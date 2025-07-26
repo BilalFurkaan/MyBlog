@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MyBlog.Application.Dtos.UserDtos;
 using MyBlog.Application.Usecasess.UserServices;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MyBlog.WebApi.Controllers
 {
@@ -26,30 +28,30 @@ namespace MyBlog.WebApi.Controllers
             var result = await _userService.RegisterAsync(createUserDto);
             return Ok(result);
         }
+        [Authorize]
         [HttpPost("complete-profile")]
         public async Task<IActionResult> CompleteProfileAsync([FromBody] CompleteProfileDto completeProfileDto)
         {
-            if (completeProfileDto == null || string.IsNullOrEmpty(completeProfileDto.UserId))
-            {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (completeProfileDto == null)
                 return BadRequest("Invalid profile data.");
-            }
+
+            completeProfileDto.UserId = userId;
 
             var result = await _userService.CompleteProfileAsync(completeProfileDto);
             return Ok(result);
         }
-        [HttpGet("profile/{userId}")]
-        public async Task<IActionResult> GetProfileAsync(string userId)
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfileAsync()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
-            {
-                return BadRequest("User ID is required.");
-            }
+                return Unauthorized();
 
             var profile = await _userService.GetUserByIdAsync(userId);
             if (profile == null)
-            {
                 return NotFound("User not found.");
-            }
             return Ok(profile);
         }
         [HttpGet("all")]
@@ -58,20 +60,27 @@ namespace MyBlog.WebApi.Controllers
             var users = await _userService.GetAllUsersAsync();
             return Ok(users);
         }
+        [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateAsync([FromBody] UpdateUserDto updateUserDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (updateUserDto == null || string.IsNullOrEmpty(updateUserDto.Id))
                 return BadRequest("Invalid user data.");
+
+            if (updateUserDto.Id != userId)
+                return Forbid("Sadece kendi profilinizi güncelleyebilirsiniz.");
 
             await _userService.UpdateAsync(updateUserDto);
             return NoContent();
         }
+        [Authorize]
         [HttpDelete("delete/{userId}")]
         public async Task<IActionResult> DeleteAsync(string userId)
         {
-            if (string.IsNullOrEmpty(userId))
-                return BadRequest("User ID is required.");
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId != currentUserId)
+                return Forbid("Sadece kendi hesabınızı silebilirsiniz.");
 
             await _userService.DeleteAsync(userId);
             return NoContent();
@@ -97,6 +106,20 @@ namespace MyBlog.WebApi.Controllers
             }
             
             return Ok(new { token, nickName = "", userId = "" });
+        }
+        [Authorize]
+        [HttpPut("update-password")]
+        public async Task<IActionResult> UpdatePasswordAsync([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (changePasswordDto == null || string.IsNullOrEmpty(changePasswordDto.Id))
+                return BadRequest("Invalid password data.");
+
+            if (changePasswordDto.Id != userId)
+                return Forbid("Sadece kendi şifrenizi güncelleyebilirsiniz.");
+
+            await _userService.UpdatePasswordAsync(changePasswordDto);
+            return NoContent();
         }
         
         

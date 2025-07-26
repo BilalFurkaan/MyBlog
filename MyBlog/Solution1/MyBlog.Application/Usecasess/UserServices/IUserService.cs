@@ -11,5 +11,6 @@ public interface IUserService
     Task<List<ResultUserDto>> GetAllUsersAsync();
     Task UpdateAsync(UpdateUserDto updateUserDto);
     Task DeleteAsync(string userId);
+    Task UpdatePasswordAsync(ChangePasswordDto changePasswordDto);
     
 }

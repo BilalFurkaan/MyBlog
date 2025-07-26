@@ -66,7 +66,7 @@ public class UserApiService: IUserApiService
 
     public async Task<(bool Success, string ErrorMessage, UserProfileViewModel Profile)> GetUserProfileAsync(string userId)
     {
-        var response = await _httpClient.GetAsync($"/api/User/profile/{userId}");
+        var response = await _httpClient.GetAsync($"/api/User/profile");
         if (response.IsSuccessStatusCode)
         {
             var json = await response.Content.ReadAsStringAsync();
@@ -87,5 +87,32 @@ public class UserApiService: IUserApiService
         
         var errorMessage = await response.Content.ReadAsStringAsync();
         return (false, errorMessage, null);
+    }
+
+    public async Task<(bool Success, string ErrorMessage)> ChangePasswordAsync(ChangePasswordViewModel model)
+    {
+        var response = await _httpClient.PutAsJsonAsync("/api/User/update-password", model);
+        if (response.IsSuccessStatusCode)
+        {
+            return (true, string.Empty);
+        }
+        var errorMessage = await response.Content.ReadAsStringAsync();
+        return (false, errorMessage);
+    }
+
+    public async Task<(bool Success, string ErrorMessage, string NickName, string UserId, string Token)> LoginAsyncWithToken(LoginViewModel model)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/User/login", model);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var obj = System.Text.Json.JsonDocument.Parse(json).RootElement;
+            var nickName = obj.TryGetProperty("nickName", out var n) ? n.GetString() : null;
+            var userId = obj.TryGetProperty("userId", out var u) ? u.GetString() : null;
+            var token = obj.TryGetProperty("token", out var t) ? t.GetString() : null;
+            return (true, string.Empty, nickName, userId, token);
+        }
+        var errorMessage = await response.Content.ReadAsStringAsync();
+        return (false, errorMessage, null, null, null);
     }
 }

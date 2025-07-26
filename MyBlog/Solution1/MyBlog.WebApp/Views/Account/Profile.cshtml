@@ -1,7 +1,14 @@
+@using WebApp.Helpers
 @{
     ViewData["Title"] = "Profil";
-    var nickName = ViewContext.HttpContext.Session.GetString("NickName");
-    var userId = ViewContext.HttpContext.Session.GetString("UserId");
+    var token = Context.Request.Cookies["access_token"];
+    string userId = null;
+    string nickName = null;
+    if (!string.IsNullOrEmpty(token))
+    {
+        userId = JwtHelper.GetClaimFromToken(token, "nameid");
+        nickName = JwtHelper.GetClaimFromToken(token, "nickName");
+    }
     var userProfile = ViewBag.UserProfile as WebApp.Models.ProfileViewModel.UserProfileViewModel;
     var isProfileCompleted = userProfile?.IsProfileCompleted ?? false;
     var displayName = string.IsNullOrEmpty(nickName) ? "Kullanıcı" : nickName;
@@ -161,35 +168,75 @@
                                       placeholder="Güncel hakkımda bilginiz">@userProfile?.About</textarea>
                         </div>
 
-                        <hr class="my-4">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            Bilgileri Güncelle
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
+        <!-- Şifre Değiştirme Kartı -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-key me-2"></i>
+                        Şifremi Değiştir
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Güvenliğiniz için güçlü bir şifre seçin ve düzenli olarak değiştirin.
+                    </p>
+                    
+                    <form method="post" action="/Account/ChangePassword">
+                        <input type="hidden" name="Id" value="@userProfile?.Id" />
+                        
                         <div class="mb-3">
-                            <label for="currentPassword" class="form-label fw-semibold">
+                            <label for="oldPassword" class="form-label fw-semibold">
                                 <i class="bi bi-lock me-1"></i>Mevcut Şifre
                             </label>
-                            <input type="password" class="form-control" id="currentPassword" name="CurrentPassword" 
-                                   placeholder="Mevcut şifrenizi girin">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="oldPassword" name="OldPassword" 
+                                       placeholder="Mevcut şifrenizi girin" required>
+                                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('oldPassword', this)">
+                                    <i class="bi bi-eye-slash"></i>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="newPassword" class="form-label fw-semibold">
                                 <i class="bi bi-key me-1"></i>Yeni Şifre
                             </label>
-                            <input type="password" class="form-control" id="newPassword" name="NewPassword" 
-                                   placeholder="Yeni şifrenizi girin">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="newPassword" name="NewPassword" 
+                                       placeholder="Yeni şifrenizi girin">
+                                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('newPassword', this)">
+                                    <i class="bi bi-eye-slash"></i>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="mb-4">
                             <label for="confirmPassword" class="form-label fw-semibold">
                                 <i class="bi bi-shield-check me-1"></i>Şifre Tekrarı
                             </label>
-                            <input type="password" class="form-control" id="confirmPassword" name="ConfirmPassword" 
-                                   placeholder="Yeni şifrenizi tekrar girin">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmPassword" name="ConfirmNewPassword" 
+                                       placeholder="Yeni şifrenizi tekrar girin">
+                                <span class="input-group-text" style="cursor:pointer;" onclick="togglePassword('confirmPassword', this)">
+                                    <i class="bi bi-eye-slash"></i>
+                                </span>
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-arrow-clockwise me-2"></i>
-                            Bilgileri Güncelle
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-key me-2"></i>
+                            Şifremi Değiştir
                         </button>
                     </form>
                 </div>
@@ -262,30 +309,39 @@
             }
         });
 
-        // Karakter sayacı
-        document.getElementById('about').addEventListener('input', function() {
-            const maxLength = 500;
-            const currentLength = this.value.length;
-            const remaining = maxLength - currentLength;
-            
-            const formText = this.parentElement.querySelector('.form-text');
-            if (remaining < 50) {
-                formText.innerHTML = `<i class="bi bi-lightbulb me-1"></i>Kalan karakter: ${remaining}`;
-                if (remaining < 0) {
-                    formText.classList.add('text-danger');
-                } else {
-                    formText.classList.remove('text-danger');
-                }
+        // Şifre göster/gizle fonksiyonu
+        function togglePassword(inputId, iconSpan) {
+            var input = document.getElementById(inputId);
+            var icon = iconSpan.querySelector('i');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                input.type = "password";
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
             }
-        });
+        }
 
-        // Takma ad benzersizlik kontrolü (opsiyonel)
-        document.getElementById('nickName').addEventListener('blur', function() {
-            const nickName = this.value;
-            if (nickName.length >= 3) {
-                // Burada AJAX ile backend'e kontrol isteği gönderilebilir
-                console.log('Takma ad kontrolü:', nickName);
-            }
-        });
+        // Karakter sayacı (eğer about alanı varsa)
+        const aboutElement = document.getElementById('about');
+        if (aboutElement) {
+            aboutElement.addEventListener('input', function() {
+                const maxLength = 500;
+                const currentLength = this.value.length;
+                const remaining = maxLength - currentLength;
+                
+                const formText = this.parentElement.querySelector('.form-text');
+                if (remaining < 50) {
+                    formText.innerHTML = `<i class="bi bi-lightbulb me-1"></i>Kalan karakter: ${remaining}`;
+                    if (remaining < 0) {
+                        formText.classList.add('text-danger');
+                    } else {
+                        formText.classList.remove('text-danger');
+                    }
+                }
+            });
+        }
     </script>
 } 

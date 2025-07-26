@@ -15,6 +15,10 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+@if (ViewBag.DebugUserId != null)
+{
+    <div style="color: red; font-weight: bold;">Session UserId: @ViewBag.DebugUserId</div>
+}
 <main class="container flex-grow-1">
     <section class="categories-section mb-5">
         <div class="text-center mb-5">

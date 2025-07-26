@@ -1,54 +1,165 @@
 @model WebApp.Models.ArticleViewModel.ArticleDetailViewModel
+
 @{
     Layout = "_Layout";
 }
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-12 px-0">
-            <div class="mx-auto" style="max-width:1200px;">
-                <div class="card shadow-sm border-0 mb-4" style="border-radius: 1.2rem;">
-                    <div class="card-body p-4 p-md-5">
-                        <h1 class="card-title mb-2" style="font-size:2rem; font-weight:700; color:#2d2d2d;">@Model.Title</h1>
-                        <div class="mb-3 d-flex flex-wrap align-items-center gap-3">
-                            <span class="badge bg-primary"><i class="bi bi-person me-1"></i> @Model.AuthorNickName</span>
-                            <span class="badge bg-light text-dark"><i class="bi bi-calendar-event me-1"></i> @Model.CreatedAt.ToString("dd.MM.yyyy")</span>
-                        </div>
-                        <hr />
-                        <div class="mb-4" style="white-space: pre-line; font-size:1.13rem; color:#333;">@Model.Content</div>
-                    </div>
-                </div>
+<!-- Başarı/Hata Mesajları -->
+@if (TempData["CommentSuccess"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-4" role="alert" style="z-index:9999; min-width:300px;">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        @TempData["CommentSuccess"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
-                <div class="card shadow-sm border-0 mt-4" style="border-radius: 1.2rem; background:#fafbfc; max-height:320px; overflow-y:auto;">
-                    <div class="card-body p-2 p-md-3">
-                        <h6 class="mb-2" style="font-weight:600; color:#3b3b3b; font-size:1rem;"><i class="bi bi-chat-dots me-2 text-primary"></i>Yorumlar</h6>
-                        @if (Model.Comments != null && Model.Comments.Any())
-                        {
-                            <ul class="list-group list-group-flush">
-                                @foreach (var comment in Model.Comments)
-                                {
-                                    <li class="list-group-item px-0 py-1" style="background:transparent; border:none; border-bottom:1px solid #f1f5f9;">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size:0.85rem; font-weight:600;">
-                                                @comment.CommenterNickName.Substring(0,1).ToUpper()
-                                            </div>
-                                            <div>
-                                                <span class="fw-semibold" style="font-size:0.92rem;">@comment.CommenterNickName</span>
-                                                <span class="text-muted small ms-2"><i class="bi bi-clock"></i> @comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
-                                            </div>
-                                        </div>
-                                        <div style="font-size:0.92rem; color:#444; margin-left:32px;">@comment.Content</div>
-                                    </li>
-                                }
-                            </ul>
-                        }
-                        else
-                        {
-                            <p class="text-muted mb-0">Henüz yorum yok.</p>
-                        }
+@if (TempData["CommentError"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show position-fixed top-0 end-0 m-4" role="alert" style="z-index:9999; min-width:300px;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        @TempData["CommentError"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <!-- Makale Başlığı  -->
+            <div class="mb-3">
+                <h2 class="fw-bold text-primary mb-2">@Model.Title</h2>
+                <div class="d-flex align-items-center text-muted small mb-2">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span class="me-2">@Model.AuthorNickName</span>
+                    <i class="bi bi-calendar3 me-1"></i>
+                    <span>@Model.CreatedAt.ToString("dd MMMM yyyy")</span>
+                </div>
+            </div>
+            
+            <!-- Etiketler - Küçültülmüş -->
+            <div class="mb-3">
+                @if (!string.IsNullOrEmpty(Model.CategoryName))
+                {
+                    <span class="badge bg-primary me-1 px-2 py-1 small">
+                        <i class="bi bi-tag me-1"></i>@Model.CategoryName
+                    </span>
+                }
+                @if (!string.IsNullOrEmpty(Model.SubcategoryName))
+                {
+                    <span class="badge bg-secondary me-1 px-2 py-1 small">
+                        <i class="bi bi-tag-fill me-1"></i>@Model.SubcategoryName
+                    </span>
+                }
+                @if (!string.IsNullOrEmpty(Model.TechnologyName))
+                {
+                    <span class="badge bg-info px-2 py-1 small">
+                        <i class="bi bi-code-slash me-1"></i>@Model.TechnologyName
+                    </span>
+                }
+            </div>
+            
+            <!-- Makale İçeriği - Büyültülmüş -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <div class="article-content fs-5 lh-base" style="max-width: none; line-height: 1.8;">
+                        @Html.Raw(Model.Content)
                     </div>
                 </div>
             </div>
+            
+            <!-- Mevcut Yorumlar - Küçültülmüş -->
+            @if (Model.Comments != null && Model.Comments.Any())
+            {
+                <div class="mb-3">
+                    <h5 class="mb-3">
+                        <i class="bi bi-chat-dots me-1 text-primary"></i>
+                        Yorumlar (@Model.Comments.Count)
+                    </h5>
+                    @foreach (var comment in Model.Comments)
+                    {
+                        <div class="card mb-2 border-0 shadow-sm">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                            <i class="bi bi-person small"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="d-block small">@comment.CommenterNickName</strong>
+                                            <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                        </div>
+                                    </div>
+                                    @if (comment.IsMine)
+                                    {
+                                        <form asp-action="DeleteComment" method="post" class="d-inline">
+                                            <input type="hidden" name="CommentId" value="@comment.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger btn-sm" 
+                                                    onclick="return confirm('Bu yorumu silmek istediğinizden emin misiniz?')">
+                                                <i class="bi bi-trash small"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                                <p class="mb-0 text-dark small">@comment.Content</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            
+            <!-- Yorum Yapma Formu  -->
+            @{
+                var token = Context.Request.Cookies["access_token"];
+                var isLoggedIn = !string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(WebApp.Helpers.JwtHelper.GetClaimFromToken(token, "nameid"));
+            }
+            
+            @if (isLoggedIn)
+            {
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light border-0 py-2">
+                        <h6 class="mb-0">
+                            <i class="bi bi-pencil-square me-1 text-primary"></i>
+                            Yorum Yap
+                        </h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <form asp-action="AddComment" method="post">
+                            <input type="hidden" name="ArticleId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <textarea class="form-control border-0 shadow-sm" name="Content" rows="2" 
+                                          placeholder="Düşüncelerinizi paylaşın... (en az 10 karakter)" 
+                                          minlength="10" maxlength="1000" required 
+                                          style="resize: none; border-radius: 8px; font-size: 0.9rem;"></textarea>
+                                <div class="form-text mt-1 small">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Yorumunuz en az 10 karakter olmalıdır.
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-sm px-3 py-1">
+                                    <i class="bi bi-send me-1"></i>Gönder
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-3 text-center">
+                        <i class="bi bi-chat-left-dots text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2 mb-1">Yorum yapmak için giriş yapın</h6>
+                        <p class="text-muted mb-2 small">Düşüncelerinizi paylaşmak için hesabınıza giriş yapın.</p>
+                        <a href="/Account/Login" class="btn btn-primary btn-sm">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Giriş Yap
+                        </a>
+                    </div>
+                </div>
+            }
+            
         </div>
     </div>
 </div>

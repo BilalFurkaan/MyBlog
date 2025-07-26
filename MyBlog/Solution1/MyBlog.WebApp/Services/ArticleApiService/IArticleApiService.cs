@@ -9,4 +9,5 @@ public interface IArticleApiService
     Task<List<ArticleListViewModel>> GetArticlesBySubCategoryAsync(int subCategoryId);
     Task<List<ArticleListViewModel>> GetArticleByTechnologyAsync(int technologyId);
     Task<ArticleDetailViewModel>GetArticleDetailAsync(int articleId);
+    Task<bool> CreateArticleAsync(CreateArticleViewModel createArticleViewModel);
 }

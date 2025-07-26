@@ -1,5 +1,6 @@
 using WebApp.Services.ArticleApiService;
 using WebApp.Services.UserApiService;
+using WebApp.Services.CommentApiService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,14 +11,20 @@ builder.Services.AddControllersWithViews();
 // Api base adresini appsettings.json'dan oku
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"];
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<WebApp.Services.ArticleApiService.JwtCookieHandler>();
 builder.Services.AddHttpClient<IArticleApiService, ArticleApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
-});
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
 builder.Services.AddHttpClient<IUserApiService, UserApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
-});
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
+builder.Services.AddHttpClient<ICommentApiService, CommentApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(1);

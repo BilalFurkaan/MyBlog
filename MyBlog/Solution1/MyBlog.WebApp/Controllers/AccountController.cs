@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApp.Models.LoginViewModel;
 using WebApp.Models.ProfileViewModel;
 using WebApp.Services.UserApiService;
+using WebApp.Helpers;
 
 namespace MyBlog.WebApp.Controllers
 {
@@ -26,9 +27,16 @@ namespace MyBlog.WebApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var (success, error, nickName, userId) = await _userApiService.LoginAsync(model);
+            var (success, error, nickName, userId, token) = await _userApiService.LoginAsyncWithToken(model);
             if (success)
             {
+                Response.Cookies.Append("access_token", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.AddHours(10)
+                });
                 if (!string.IsNullOrEmpty(nickName))
                     HttpContext.Session.SetString("NickName", nickName);
                 if (!string.IsNullOrEmpty(userId))
@@ -76,79 +84,75 @@ namespace MyBlog.WebApp.Controllers
         {
             // Session'ı temizle
             HttpContext.Session.Clear();
-            
-            // Başarı mesajı göster
-            TempData["LogoutSuccess"] = "Başarıyla çıkış yaptınız.";
-            
-            // Anasayfaya yönlendir
+            Response.Cookies.Delete("access_token");
+            TempData["LogoutSuccess"] = "Çıkış başarılı!";
             return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            // Kullanıcı giriş yapmış mı kontrol et (sadece UserId'ye bak)
-            var userId = HttpContext.Session.GetString("UserId");
-            
+            var token = Request.Cookies["access_token"];
+            string userId = null;
+            string nickName = null;
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = JwtHelper.GetClaimFromToken(token, "nameid");
+                nickName = JwtHelper.GetClaimFromToken(token, "nickName");
+            }
+            ViewBag.NickName = nickName;
+            ViewBag.UserId = userId;
             if (string.IsNullOrEmpty(userId))
             {
                 return RedirectToAction("Login");
             }
-
-            // Kullanıcının profil bilgilerini getir
             var (success, error, profile) = await _userApiService.GetUserProfileAsync(userId);
-            
             if (success && profile != null)
             {
                 ViewBag.UserProfile = profile;
             }
             else
             {
-                // API çağrısı başarısız olursa, boş profil oluştur
                 ViewBag.UserProfile = new UserProfileViewModel
                 {
                     Id = userId,
                     IsProfileCompleted = false
                 };
             }
-            
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> CompleteProfile(CompleteProfileViewModel model)
         {
+            var token = Request.Cookies["access_token"];
+            string userId = null;
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = JwtHelper.GetClaimFromToken(token, "nameid");
+            }
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["ProfileError"] = "Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.";
+                return RedirectToAction("Login");
+            }
+            model.UserId = userId;
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage)
                     .ToList();
-                
                 var errorMessage = string.Join(", ", errors);
                 TempData["ProfileError"] = $"Validation hatası: {errorMessage}";
                 return RedirectToAction("Profile");
             }
-
-            // Session'dan UserId'yi al
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-            {
-                TempData["ProfileError"] = "Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.";
-                return RedirectToAction("Login");
-            }
-
-            model.UserId = userId;
-
             var (success, error) = await _userApiService.CompleteProfileAsync(model);
             if (success)
             {
-                // Session'ı güncelle
-                HttpContext.Session.SetString("NickName", model.NickName);
                 TempData["ProfileSuccess"] = "Profil başarıyla tamamlandı!";
                 return RedirectToAction("Profile");
             }
-
             TempData["ProfileError"] = error ?? "Profil tamamlanırken bir hata oluştu.";
             return RedirectToAction("Profile");
         }
@@ -156,36 +160,62 @@ namespace MyBlog.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateProfile(UpdateProfileViewModel model)
         {
-            if (!ModelState.IsValid)
+            var token = Request.Cookies["access_token"];
+            string userId = null;
+            if (!string.IsNullOrEmpty(token))
             {
-                TempData["ProfileError"] = "Lütfen tüm alanları doğru şekilde doldurun.";
-                return RedirectToAction("Profile");
+                userId = JwtHelper.GetClaimFromToken(token, "nameid");
             }
-
-            // Session'dan UserId'yi al
-            var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
             {
                 TempData["ProfileError"] = "Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.";
                 return RedirectToAction("Login");
             }
-
             model.Id = userId;
-
+            if (!ModelState.IsValid)
+            {
+                TempData["ProfileError"] = "Lütfen tüm alanları doğru şekilde doldurun.";
+                return RedirectToAction("Profile");
+            }
             var (success, error) = await _userApiService.UpdateProfileAsync(model);
             if (success)
             {
-                // NickName güncellendiyse session'ı güncelle
-                if (!string.IsNullOrEmpty(model.NickName))
-                {
-                    HttpContext.Session.SetString("NickName", model.NickName);
-                }
-                
                 TempData["ProfileSuccess"] = "Profil başarıyla güncellendi!";
                 return RedirectToAction("Profile");
             }
-
             TempData["ProfileError"] = error ?? "Profil güncellenirken bir hata oluştu.";
+            return RedirectToAction("Profile");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            var token = Request.Cookies["access_token"];
+            string userId = null;
+            if (!string.IsNullOrEmpty(token))
+            {
+                userId = JwtHelper.GetClaimFromToken(token, "nameid");
+            }
+            if (string.IsNullOrEmpty(userId))
+            {
+                TempData["ProfileError"] = "Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.";
+                return RedirectToAction("Login");
+            }
+            
+            model.Id = userId;
+            if (!ModelState.IsValid)
+            {
+                TempData["ProfileError"] = "Lütfen tüm alanları doğru şekilde doldurun.";
+                return RedirectToAction("Profile");
+            }
+            
+            var (success, error) = await _userApiService.ChangePasswordAsync(model);
+            if (success)
+            {
+                TempData["ProfileSuccess"] = "Şifreniz başarıyla güncellendi!";
+                return RedirectToAction("Profile");
+            }
+            TempData["ProfileError"] = error ?? "Şifre güncellenirken bir hata oluştu.";
             return RedirectToAction("Profile");
         }
     }

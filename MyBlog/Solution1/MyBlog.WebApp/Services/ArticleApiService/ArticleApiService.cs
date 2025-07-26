@@ -50,4 +50,10 @@ public class ArticleApiService: IArticleApiService
         var article = await response.Content.ReadFromJsonAsync<ArticleDetailViewModel>();
         return article!;
     }
+    
+    public async Task<bool> CreateArticleAsync(CreateArticleViewModel createArticleViewModel)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/Article", createArticleViewModel);
+        return response.IsSuccessStatusCode;
+    }
 }

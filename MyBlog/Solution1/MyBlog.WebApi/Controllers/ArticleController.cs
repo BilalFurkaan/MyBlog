@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyBlog.Application.Dtos.ArticleDtos;
 using MyBlog.Application.Usecasess.ArticleServices;
@@ -84,10 +86,12 @@ namespace MyBlog.WebApi.Controllers
             var articles = await _articleService.GetArticlesByUserIdAsync(userId);
             return Ok(articles);
         }
-
+        
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<ResultArticleDto>> CreateArticle(CreateArticleDto createArticleDto)
         {
+            var userId=User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (createArticleDto == null)
             {
                 return BadRequest("Invalid article data.");
@@ -95,6 +99,7 @@ namespace MyBlog.WebApi.Controllers
 
             try
             {
+                createArticleDto.UserId = userId;
                 var article = await _articleService.CreateArticleAsync(createArticleDto);
                 return CreatedAtAction(nameof(GetArticleById), new { id = article.Id }, article);
             }
@@ -104,14 +109,23 @@ namespace MyBlog.WebApi.Controllers
             }
 
         }
-
+        [Authorize]
         [HttpPut]
         public async Task<ActionResult<ResultArticleDto>> UpdateArticle(UpdateArticleDto updateArticleDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             try
             {
-                var article = await _articleService.UpdateArticleAsync(updateArticleDto);
-                return Ok(article);
+                // Makalenin sahibi mi kontrol et
+                var article = await _articleService.GetArticleByIdAsync(updateArticleDto.Id);
+                if (article == null)
+                    return NotFound("Makale bulunamadı.");
+                if (article.UserId != userId)
+                    return Forbid("Bu makaleyi güncellemeye yetkiniz yok.");
+
+                updateArticleDto.UserId = userId;
+                var updatedArticle = await _articleService.UpdateArticleAsync(updateArticleDto);
+                return Ok(updatedArticle);
             }
             catch (KeyNotFoundException ex)
             {
@@ -120,10 +134,19 @@ namespace MyBlog.WebApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteArticle(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             try
             {
+                // Makalenin sahibi mi kontrol et
+                var article = await _articleService.GetArticleByIdAsync(id);
+                if (article == null)
+                    return NotFound("Makale bulunamadı.");
+                if (article.UserId != userId)
+                    return Forbid("Bu makaleyi silmeye yetkiniz yok.");
+
                 await _articleService.DeleteArticleAsync(id);
                 return NoContent();
             }

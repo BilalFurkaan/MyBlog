@@ -19,14 +19,4 @@ public class UpdateProfileViewModel
     [Display(Name = "Hakkımda")]
     public string? About { get; set; }
     
-    [Display(Name = "Mevcut Şifre")]
-    public string? CurrentPassword { get; set; }
-    
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Şifre en az 6 karakter olmalıdır")]
-    [Display(Name = "Yeni Şifre")]
-    public string? NewPassword { get; set; }
-    
-    [Compare("NewPassword", ErrorMessage = "Şifreler eşleşmiyor")]
-    [Display(Name = "Şifre Tekrarı")]
-    public string? ConfirmPassword { get; set; }
 }

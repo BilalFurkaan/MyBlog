@@ -172,21 +172,6 @@ public class UserService: IUserService
             user.Job = updateUserDto.Job;
         if (!string.IsNullOrWhiteSpace(updateUserDto.About))
             user.About = updateUserDto.About;
-        if (!string.IsNullOrWhiteSpace(updateUserDto.Email))
-        {
-            user.Email = updateUserDto.Email;
-            user.UserName = updateUserDto.Email; // Email değişirse UserName de güncellenir
-        }
-
-        // Şifre değişikliği
-        if (!string.IsNullOrWhiteSpace(updateUserDto.NewPassword))
-        {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await _userManager.ResetPasswordAsync(user, token, updateUserDto.NewPassword);
-            if (!result.Succeeded)
-                throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
-        }
-
         var updateResult = await _userManager.UpdateAsync(user);
         if (!updateResult.Succeeded)
             throw new Exception(string.Join(", ", updateResult.Errors.Select(e => updateResult.Errors.Select(e => e.Description))));
@@ -201,5 +186,32 @@ public class UserService: IUserService
         var result = await _userManager.DeleteAsync(user);
         if (!result.Succeeded)
             throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+    }
+
+    public async Task UpdatePasswordAsync(ChangePasswordDto changePasswordDto)
+    {
+        var user = await _userManager.FindByIdAsync(changePasswordDto.Id);
+        if (user == null)
+            throw new Exception("Kullanıcı bulunamadı!");
+
+        // Eski şifre kontrolü
+        if (!string.IsNullOrWhiteSpace(changePasswordDto.OldPassword))
+        {
+            var isOldPasswordCorrect = await _userManager.CheckPasswordAsync(user, changePasswordDto.OldPassword);
+            if (!isOldPasswordCorrect)
+                throw new Exception("Mevcut şifre yanlış!");
+        }
+
+        if (!string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, changePasswordDto.NewPassword);
+            if (!result.Succeeded)
+                throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+            throw new Exception(string.Join(", ", updateResult.Errors.Select(e => e.Description)));
     }
 }

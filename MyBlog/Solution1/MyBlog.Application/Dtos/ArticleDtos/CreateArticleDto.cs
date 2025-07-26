@@ -16,6 +16,4 @@ public class CreateArticleDto
     public int? TechnologyId { get; set; }
     public string UserId { get; set; }
     //public string? FeaturedImageUrl { get; set; }
-
-    
 }

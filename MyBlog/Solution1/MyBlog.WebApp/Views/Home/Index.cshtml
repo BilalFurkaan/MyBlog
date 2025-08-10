@@ -1,5 +1,4 @@
-﻿@* Home sayfası ana içerik *@
-@if (TempData["LoginSuccess"] != null)
+﻿@if (TempData["LoginSuccess"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-4" role="alert" style="z-index:9999; min-width:220px;">
         <i class="bi bi-check-circle-fill me-2"></i>
@@ -14,10 +13,6 @@
         @TempData["LogoutSuccess"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-}
-@if (ViewBag.DebugUserId != null)
-{
-    <div style="color: red; font-weight: bold;">Session UserId: @ViewBag.DebugUserId</div>
 }
 <main class="container flex-grow-1">
     <section class="categories-section mb-5">
@@ -249,7 +244,6 @@
             <aside class="col-lg-3"></aside>
             <div class="col-lg-9">
                 <section class="blog-list">
-                    <!-- Blog kartları buraya gelecek -->
                 </section>
             </div>
         </div>

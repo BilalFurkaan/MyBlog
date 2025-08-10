@@ -1,6 +1,9 @@
 using WebApp.Services.ArticleApiService;
 using WebApp.Services.UserApiService;
 using WebApp.Services.CommentApiService;
+using WebApp.Services.CategoryApiService;
+using WebApp.Services.SubcategoryApiService;
+using WebApp.Services.TechnologiesApiService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +25,18 @@ builder.Services.AddHttpClient<IUserApiService, UserApiService>(client =>
     client.BaseAddress = new Uri(apiBaseUrl);
 }).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
 builder.Services.AddHttpClient<ICommentApiService, CommentApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
+builder.Services.AddHttpClient<ICategoryApiService, CategoryApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
+builder.Services.AddHttpClient<ISubcategoryApiService, SubcategoryApiService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+}).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();
+builder.Services.AddHttpClient<ITechnologiesApiService, TechnologiesApiService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
 }).AddHttpMessageHandler<WebApp.Services.ArticleApiService.JwtCookieHandler>();

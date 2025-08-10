@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace WebApp.Models.ArticleViewModel;
 
-public class CreateArticleViewModel
+public abstract class UpdateArticleViewModel
 {
+    public int Id { get; set; }
     [Required]
     [StringLength(200, MinimumLength = 10)]
     public string Title { get; set; }
@@ -16,6 +18,7 @@ public class CreateArticleViewModel
     public int? SubcategoryId { get; set; }
     public int? TechnologyId { get; set; }
     public string UserId { get; set; }
+    public bool IsOwner { get; set; }
     public List<SelectListItem> Categories { get; set; } = new();
     public List<SelectListItem> Subcategories { get; set; } = new();
     public List<SelectListItem> Technologies { get; set; } = new();

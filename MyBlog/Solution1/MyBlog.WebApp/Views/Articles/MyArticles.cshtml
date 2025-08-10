@@ -1,0 +1,65 @@
+@model List<WebApp.Models.ArticleViewModel.ArticleListViewModel>
+@{
+    ViewData["Title"] = "Makalelerim";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Makalelerim</h2>
+        <a class="btn btn-primary" href="/Articles/create">Yeni Makale</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-muted">Henüz bir makaleniz yok.</div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+            @foreach (var article in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@article.Title</h5>
+                            <p class="card-text text-muted small mb-2">
+                                @article.CategoryName
+                                @if (!string.IsNullOrEmpty(article.SubcategoryName))
+                                {
+                                    <span> / @article.SubcategoryName</span>
+                                }
+                                @if (!string.IsNullOrEmpty(article.TechnologyName))
+                                {
+                                    <span> / @article.TechnologyName</span>
+                                }
+                            </p>
+                            <p class="card-text text-muted small mb-2">
+                                @article.CreatedAt.ToString("yyyy-MM-dd HH:mm")
+                            </p>
+                        </div>
+                        <div class="card-footer bg-white border-0 d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="/Articles/detail/@article.Id">Görüntüle</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/Articles/edit/@article.Id">Düzenle</a>
+                            <form method="post" action="/Articles/delete-article" class="ms-auto">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="articleId" value="@article.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bu makaleyi silmek istediğinize emin misiniz?');">Sil</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+

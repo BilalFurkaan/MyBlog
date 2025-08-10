@@ -56,4 +56,27 @@ public class ArticleApiService: IArticleApiService
         var response = await _httpClient.PostAsJsonAsync("/api/Article", createArticleViewModel);
         return response.IsSuccessStatusCode;
     }
+
+    public async Task<List<ArticleListViewModel>> GetUserArticle(string userId)
+    {
+        var response =await _httpClient.GetAsync($"/api/Article/user/{userId}");
+        response.EnsureSuccessStatusCode();
+        var articles = await response.Content.ReadFromJsonAsync<List<ArticleListViewModel>>();
+        return articles ?? new List<ArticleListViewModel>();
+    }
+
+    public async Task<List<UpdateArticleViewModel>> UpdateArticleAsync(UpdateArticleViewModel updateArticleViewModel)
+    {
+        var response =await _httpClient.PutAsJsonAsync("/api/Article", updateArticleViewModel);
+        response.EnsureSuccessStatusCode();
+        var updatedArticles = await response.Content.ReadFromJsonAsync<List<UpdateArticleViewModel>>();
+        return updatedArticles ?? new List<UpdateArticleViewModel>();
+        
+    }
+
+    public async Task<bool> DeleteArticleAsync(int articleId)
+    {
+        var response = await _httpClient.DeleteAsync($"/api/Article/{articleId}");
+        return response.IsSuccessStatusCode;
+    }
 }

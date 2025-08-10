@@ -6,6 +6,9 @@ public class ArticleListViewModel
     public string Title { get; set; }
     public string AuthorNickName { get; set; }
     public string CategoryName { get; set; }
+    public string? SubcategoryName { get; set; }
+    public string? TechnologyName { get; set; }
     public DateTime CreatedAt { get; set; }
     public int CommentCount { get; set; }
+    public bool IsOwner { get; set; }
 }
